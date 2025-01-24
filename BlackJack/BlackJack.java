@@ -139,6 +139,7 @@ public class BlackJack {
     JPanel buttonPanel = new JPanel();
     JButton hitButton = new JButton("Hit");
     JButton stayButton = new JButton("Stay");
+    JButton playAgainButton = new JButton("Play Again");
 
     //Constructor for black jack game
     BlackJack() {
@@ -159,6 +160,8 @@ public class BlackJack {
         buttonPanel.add(hitButton);
         stayButton.setFocusable(false);
         buttonPanel.add(stayButton);
+        playAgainButton.setFocusable(false);
+        buttonPanel.add(playAgainButton);
         frame.add(buttonPanel,BorderLayout.SOUTH);
 
         //action listener to tell what to do when the "hit" button is clicked
@@ -168,7 +171,7 @@ public class BlackJack {
                 playerSum += card.getValue();
                 playerAceCount += card.isAce() ? 1 : 0;
                 playerHand.add(card);
-                if (reducePlayerAce() > 21) {
+                if (reducePlayerAce() >= 21) {
                     hitButton.setEnabled(false);
                 }
                 gamePanel.repaint();
@@ -187,6 +190,17 @@ public class BlackJack {
                     dealerHand.add(card);
                 }
                 gamePanel.repaint();
+            }
+        });
+
+        playAgainButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                startGame();
+                hitButton.setEnabled(true);
+                stayButton.setEnabled(true);
+                gamePanel.repaint();
+
+
             }
         });
 
