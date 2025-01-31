@@ -69,6 +69,10 @@ public class BlackJack {
     int cardWidth = 110;
     int cardHeight = 154;
 
+    //chip pool and betting round variables
+    int chipsPool = 100;
+    int currentBet = 20;
+
     //Create GUI and button action listeners
     JFrame frame = new JFrame("Black Jack");
     JPanel gamePanel = new JPanel() {
@@ -101,6 +105,12 @@ public class BlackJack {
                   g.drawImage(cardImg, 20 + (cardWidth + 5)*i, 320, cardWidth, cardHeight, null);
                 }
 
+                //display ongoing chip count
+                String displayChips = "Chips: " + Integer.toString(chipsPool);
+                g.setFont(new Font("Arial", Font.PLAIN, 30));
+                g.setColor(Color.white);
+                g.drawString(displayChips, 415, 510);
+
                 //Logic to decide who won once the stay button has been clicked
                 if(!stayButton.isEnabled()) {
                     dealerSum = reduceDealerAce();
@@ -111,19 +121,27 @@ public class BlackJack {
 
                     String message = "";
                     if (playerSum > 21) {
+                        chipsPool -= currentBet;
+                        System.out.println(chipsPool);
                         message = "You Lose!";
                     }
                     else if (dealerSum > 21) {
+                        chipsPool += currentBet;
+                        System.out.println(chipsPool);
                         message = "You Win!";
                     }
                     else if (playerSum == dealerSum) {
                         message = "Draw!";
                     }
                     else if (playerSum > dealerSum) {
+                        chipsPool += currentBet;
+                        System.out.println(chipsPool);
                         message = "You Win!";
                     }
                     else if (playerSum < dealerSum) {
-                        message = "Your Lose!";
+                        chipsPool -= currentBet;
+                        System.out.println(chipsPool);
+                        message = "You Lose!";
                     }
 
                    g.setFont(new Font("Arial", Font.PLAIN, 30));
@@ -144,7 +162,7 @@ public class BlackJack {
     //Constructor for black jack game
     BlackJack() {
         startGame();
-
+        
         //Create frame and show on screen
         frame.setVisible(true);
         frame.setSize(boardWidth, boardHeight);
@@ -163,6 +181,9 @@ public class BlackJack {
         playAgainButton.setFocusable(false);
         buttonPanel.add(playAgainButton);
         frame.add(buttonPanel,BorderLayout.SOUTH);
+
+        //pop up window to set bet for the current round
+        setBet();
 
         //action listener to tell what to do when the "hit" button is clicked
         hitButton.addActionListener(new ActionListener() {
@@ -199,7 +220,7 @@ public class BlackJack {
                 hitButton.setEnabled(true);
                 stayButton.setEnabled(true);
                 gamePanel.repaint();
-
+                setBet();
 
             }
         });
@@ -212,6 +233,8 @@ public class BlackJack {
 //This section contains all Java Functions-------------------------------------------------------------------------------------------------------
 
     public void startGame() {
+
+
         //create the deck 
         buildDeck();
         shuffleDeck();
@@ -313,6 +336,39 @@ public class BlackJack {
         }
         return dealerSum;
     }
+
+    //Function creates betting window and sets bet amount from user input
+    public void setBet() {
+
+         JFrame f = new JFrame("Place Bet");
+  
+         JButton b = new JButton("Submit");
+  
+         JTextField t = new JTextField(12);
+  
+         JPanel p = new JPanel();
+  
+         p.add(t);
+         p.add(b);
+  
+         f.add(p);
+         f.setSize(300, 100);
+         f.setLocationRelativeTo(null);
+         f.setResizable(false);
+         f.toFront();
+         f.setVisible(true);
+
+         b.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                String textBet = (t.getText());
+                currentBet = Integer.parseInt(textBet);
+                f.dispose();
+            }
+        });
+
+
+    }
+
 
 //Main Function to run black jack game-------------------------------------------------------------------------------------------------------------------
     public static void main(String[] args) throws Exception {
