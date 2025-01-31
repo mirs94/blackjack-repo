@@ -71,7 +71,7 @@ public class BlackJack {
 
     //chip pool and betting round variables
     int chipsPool = 100;
-    int currentBet = 20;
+    int currentBet;
 
     //Create GUI and button action listeners
     JFrame frame = new JFrame("Black Jack");
@@ -111,43 +111,7 @@ public class BlackJack {
                 g.setColor(Color.white);
                 g.drawString(displayChips, 415, 510);
 
-                //Logic to decide who won once the stay button has been clicked
-                if(!stayButton.isEnabled()) {
-                    dealerSum = reduceDealerAce();
-                    playerSum = reducePlayerAce();
-                    System.out.println("Stay: ");
-                    System.out.println(dealerSum);
-                    System.out.println(playerSum);
-
-                    String message = "";
-                    if (playerSum > 21) {
-                        chipsPool -= currentBet;
-                        System.out.println(chipsPool);
-                        message = "You Lose!";
-                    }
-                    else if (dealerSum > 21) {
-                        chipsPool += currentBet;
-                        System.out.println(chipsPool);
-                        message = "You Win!";
-                    }
-                    else if (playerSum == dealerSum) {
-                        message = "Draw!";
-                    }
-                    else if (playerSum > dealerSum) {
-                        chipsPool += currentBet;
-                        System.out.println(chipsPool);
-                        message = "You Win!";
-                    }
-                    else if (playerSum < dealerSum) {
-                        chipsPool -= currentBet;
-                        System.out.println(chipsPool);
-                        message = "You Lose!";
-                    }
-
-                   g.setFont(new Font("Arial", Font.PLAIN, 30));
-                   g.setColor(Color.white);
-                   g.drawString(message, 220, 250);
-                }
+                
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -156,8 +120,8 @@ public class BlackJack {
     };
     JPanel buttonPanel = new JPanel();
     JButton hitButton = new JButton("Hit");
+    JButton doubleButton = new JButton("Double");
     JButton stayButton = new JButton("Stay");
-    JButton playAgainButton = new JButton("Play Again");
 
     //Constructor for black jack game
     BlackJack() {
@@ -176,10 +140,10 @@ public class BlackJack {
 
         hitButton.setFocusable(false);
         buttonPanel.add(hitButton);
+        doubleButton.setFocusable(false);
+        buttonPanel.add(doubleButton);
         stayButton.setFocusable(false);
         buttonPanel.add(stayButton);
-        playAgainButton.setFocusable(false);
-        buttonPanel.add(playAgainButton);
         frame.add(buttonPanel,BorderLayout.SOUTH);
 
         //pop up window to set bet for the current round
@@ -199,9 +163,28 @@ public class BlackJack {
             }
         });
 
+        //action listener to tell what to do when the "double" button is clicked
+        doubleButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                int doubleBet;
+                doubleBet = currentBet * 2;
+                currentBet = doubleBet;
+
+                Card card = deck.remove(deck.size()-1);
+                playerSum += card.getValue();
+                playerAceCount += card.isAce() ? 1 : 0;
+                playerHand.add(card);
+                
+                gamePanel.repaint();
+                checkWinner();
+            }
+        });
+
+        //action listener to tell what to do when the "stay" button is clicked
         stayButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 hitButton.setEnabled(false);
+                doubleButton.setEnabled(false);
                 stayButton.setEnabled(false);
 
                 while (dealerSum < 17) {
@@ -211,19 +194,10 @@ public class BlackJack {
                     dealerHand.add(card);
                 }
                 gamePanel.repaint();
+                checkWinner();
             }
         });
 
-        playAgainButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                startGame();
-                hitButton.setEnabled(true);
-                stayButton.setEnabled(true);
-                gamePanel.repaint();
-                setBet();
-
-            }
-        });
 
         gamePanel.repaint();
     }
@@ -233,7 +207,6 @@ public class BlackJack {
 //This section contains all Java Functions-------------------------------------------------------------------------------------------------------
 
     public void startGame() {
-
 
         //create the deck 
         buildDeck();
@@ -340,33 +313,107 @@ public class BlackJack {
     //Function creates betting window and sets bet amount from user input
     public void setBet() {
 
-         JFrame f = new JFrame("Place Bet");
-  
-         JButton b = new JButton("Submit");
-  
-         JTextField t = new JTextField(12);
-  
-         JPanel p = new JPanel();
-  
-         p.add(t);
-         p.add(b);
-  
-         f.add(p);
-         f.setSize(300, 100);
-         f.setLocationRelativeTo(null);
-         f.setResizable(false);
-         f.toFront();
-         f.setVisible(true);
+        hitButton.setEnabled(false);
+        doubleButton.setEnabled(false);
+        stayButton.setEnabled(false);
 
-         b.addActionListener(new ActionListener() {
+         JFrame betFrame = new JFrame("Place Bet");
+         JButton commitButton = new JButton("Submit");
+         JTextField betField = new JTextField(12);
+         JPanel betPanel = new JPanel();
+         
+         betPanel.add(betField);
+         betPanel.add(commitButton);
+  
+         betFrame.add(betPanel);
+         betFrame.setSize(300, 100);
+         betFrame.setLocationRelativeTo(null);
+         betFrame.setResizable(false);
+         betFrame.toFront();
+         betFrame.setVisible(true);
+
+         commitButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                String textBet = (t.getText());
+                String textBet = (betField.getText());
+                System.out.println(textBet);
                 currentBet = Integer.parseInt(textBet);
-                f.dispose();
+                System.out.println(currentBet);
+                hitButton.setEnabled(true);
+                doubleButton.setEnabled(true);
+                stayButton.setEnabled(true);
+                betFrame.dispose();
             }
         });
 
 
+    }
+
+    //function for completing dealer behavior, comparing final hands, resolving bets, and starting a new hand
+    public void checkWinner(){
+        
+        hitButton.setEnabled(false);
+        doubleButton.setEnabled(false);
+        stayButton.setEnabled(false);
+        
+        dealerSum = reduceDealerAce();
+        playerSum = reducePlayerAce();
+        System.out.println("Stay: ");
+        System.out.println(dealerSum);
+        System.out.println(playerSum);
+
+        String message = "";
+        if (playerSum > 21) {
+            chipsPool -= currentBet;
+            System.out.println(chipsPool);
+            message = "You Lose!";
+            }
+        else if (dealerSum > 21) {
+            chipsPool += currentBet;
+            System.out.println(chipsPool);
+            message = "You Win!";
+            }
+        else if (playerSum == dealerSum) {
+            message = "Draw!";
+            }
+        else if (playerSum > dealerSum) {
+            chipsPool += currentBet;
+            System.out.println(chipsPool);
+            message = "You Win!";
+            }
+        else if (playerSum < dealerSum) {
+            chipsPool -= currentBet;
+            System.out.println(chipsPool);
+            message = "You Lose!";
+            }
+
+        JFrame resultFrame = new JFrame("Hand Results");
+        JButton playAgainButton = new JButton("Play Again");
+        JPanel resultPanel = new JPanel();
+        JLabel resultLabel = new JLabel(message);
+        
+        resultPanel.add(resultLabel);
+        resultPanel.add(playAgainButton);
+
+        resultFrame.add(resultPanel);
+        resultFrame.setSize(300, 100);
+        resultFrame.setLocationRelativeTo(null);
+        resultFrame.setResizable(false);
+        resultFrame.toFront();
+        resultFrame.setVisible(true);
+
+        playAgainButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                startGame();
+                hitButton.setEnabled(true);
+                doubleButton.setEnabled(true);
+                stayButton.setEnabled(true);
+                gamePanel.repaint();
+                resultFrame.dispose();
+                setBet();
+
+            }
+        });
+        
     }
 
 
