@@ -121,6 +121,7 @@ public class BlackJack {
     JPanel buttonPanel = new JPanel();
     JButton hitButton = new JButton("Hit");
     JButton doubleButton = new JButton("Double");
+    JButton surrenderButton = new JButton("Surrender");
     JButton stayButton = new JButton("Stay");
 
     //Constructor for black jack game
@@ -142,6 +143,8 @@ public class BlackJack {
         buttonPanel.add(hitButton);
         doubleButton.setFocusable(false);
         buttonPanel.add(doubleButton);
+        surrenderButton.setFocusable(false);
+        buttonPanel.add(surrenderButton);
         stayButton.setFocusable(false);
         buttonPanel.add(stayButton);
         frame.add(buttonPanel,BorderLayout.SOUTH);
@@ -177,6 +180,23 @@ public class BlackJack {
                 
                 gamePanel.repaint();
                 checkWinner();
+            }
+        });
+
+        //action listener to tell what to do when the "surrender" button is clicked
+        surrenderButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                double halfBet;
+                int returnBet;
+                halfBet = currentBet / 2;
+                double roundedDown = Math.floor(halfBet);
+                Double d = new Double(roundedDown);
+                returnBet = d.intValue();
+                
+                chipsPool -= returnBet;
+
+                gamePanel.repaint();
+                forfeit();
             }
         });
 
@@ -315,6 +335,7 @@ public class BlackJack {
 
         hitButton.setEnabled(false);
         doubleButton.setEnabled(false);
+        surrenderButton.setEnabled(false);
         stayButton.setEnabled(false);
 
          JFrame betFrame = new JFrame("Place Bet");
@@ -340,6 +361,7 @@ public class BlackJack {
                 System.out.println(currentBet);
                 hitButton.setEnabled(true);
                 doubleButton.setEnabled(true);
+                surrenderButton.setEnabled(true);
                 stayButton.setEnabled(true);
                 betFrame.dispose();
             }
@@ -353,6 +375,7 @@ public class BlackJack {
         
         hitButton.setEnabled(false);
         doubleButton.setEnabled(false);
+        surrenderButton.setEnabled(false);
         stayButton.setEnabled(false);
         
         dealerSum = reduceDealerAce();
@@ -406,6 +429,7 @@ public class BlackJack {
                 startGame();
                 hitButton.setEnabled(true);
                 doubleButton.setEnabled(true);
+                surrenderButton.setEnabled(true);
                 stayButton.setEnabled(true);
                 gamePanel.repaint();
                 resultFrame.dispose();
@@ -414,6 +438,42 @@ public class BlackJack {
             }
         });
         
+    }
+
+    public void forfeit(){
+        hitButton.setEnabled(false);
+        doubleButton.setEnabled(false);
+        surrenderButton.setEnabled(false);
+        stayButton.setEnabled(false);
+
+        JFrame resultFrame = new JFrame("Hand Results");
+        JButton playAgainButton = new JButton("Play Again");
+        JPanel resultPanel = new JPanel();
+        JLabel resultLabel = new JLabel("Forfeit");
+        
+        resultPanel.add(resultLabel);
+        resultPanel.add(playAgainButton);
+
+        resultFrame.add(resultPanel);
+        resultFrame.setSize(300, 100);
+        resultFrame.setLocationRelativeTo(null);
+        resultFrame.setResizable(false);
+        resultFrame.toFront();
+        resultFrame.setVisible(true);
+
+        playAgainButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                startGame();
+                hitButton.setEnabled(true);
+                doubleButton.setEnabled(true);
+                surrenderButton.setEnabled(true);
+                stayButton.setEnabled(true);
+                gamePanel.repaint();
+                resultFrame.dispose();
+                setBet();
+
+            }
+        });
     }
 
 
