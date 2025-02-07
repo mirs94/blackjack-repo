@@ -68,11 +68,13 @@ public class BlackJack {
     int playerAceCountSplit;
     boolean hasSplit; // Flag to track if the player has split
 
+    boolean playingSplitHand = false; //used to track if the second hand is being played when split
+
 
     //GUI Variables
     //window size
     int boardWidth = 600;
-    int boardHeight = boardWidth;
+    int boardHeight = 800;
 
     //card size ratio 1 to 1.4
     int cardWidth = 110;
@@ -128,7 +130,7 @@ public class BlackJack {
                 String displayChips = "Chips: " + Integer.toString(chipsPool);
                 g.setFont(new Font("Arial", Font.PLAIN, 30));
                 g.setColor(Color.white);
-                g.drawString(displayChips, 415, 510);
+                g.drawString(displayChips, 415, 680);
 
                 
 
@@ -143,12 +145,14 @@ public class BlackJack {
     JButton surrenderButton = new JButton("Surrender");
     JButton stayButton = new JButton("Stay");
     JButton splitButton = new JButton("Split");
+    JPanel statusPanel = new JPanel();
+    JLabel handStatusLabel;
 
 
     //Constructor for black jack game
     BlackJack() {
         dealerCardHidden = true;
-        startGame();
+
         
         //Create frame and show on screen
         frame.setVisible(true);
@@ -160,6 +164,8 @@ public class BlackJack {
         gamePanel.setLayout(new BorderLayout());
         gamePanel.setBackground(new Color(53, 101, 77));
         frame.add(gamePanel);
+
+        statusPanel.setBackground(new Color(53, 101, 77)); // Match game panel color
 
         hitButton.setFocusable(false);
         buttonPanel.add(hitButton);
@@ -173,24 +179,38 @@ public class BlackJack {
         splitButton.setFocusable(false);
         splitButton.setEnabled(false); // Initially disabled
 
+        handStatusLabel = new JLabel("Playing First Hand");
+        handStatusLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        handStatusLabel.setForeground(Color.WHITE);
+        gamePanel.add(handStatusLabel);
+        handStatusLabel.setBounds(220, 280, 200, 30); // Positioning the label
+        statusPanel.add(handStatusLabel);
+
+        frame.add(statusPanel, BorderLayout.NORTH);
         frame.add(buttonPanel,BorderLayout.SOUTH);
 
+
+
+        startGame();
+        
         //pop up window to set bet for the current round
         setBet();
 
         //action listener to tell what to do when the "hit" button is clicked
         hitButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                if (!hasSplit || playerHand.size() > playerHandSplit.size()) {
+                if (hasSplit && !playingSplitHand) {
+                    // Play first hand
                     Card card = deck.remove(deck.size() - 1);
                     playerSum += card.getValue();
                     playerAceCount += card.isAce() ? 1 : 0;
                     playerHand.add(card);
-        
+                    
                     if (reducePlayerAce() >= 21) {
                         hitButton.setEnabled(false);
                     }
-                } else {
+                } else if (hasSplit && playingSplitHand) {
+                    // Play second (split) hand
                     Card card = deck.remove(deck.size() - 1);
                     playerSumSplit += card.getValue();
                     playerAceCountSplit += card.isAce() ? 1 : 0;
@@ -199,11 +219,21 @@ public class BlackJack {
                     if (reduceSplitAce() >= 21) {
                         hitButton.setEnabled(false);
                     }
-                }
+                } else {
+                    // Normal hit logic if no split
+                    Card card = deck.remove(deck.size() - 1);
+                    playerSum += card.getValue();
+                    playerAceCount += card.isAce() ? 1 : 0;
+                    playerHand.add(card);
         
+                    if (reducePlayerAce() >= 21) {
+                        hitButton.setEnabled(false);
+                    }
+                }
                 gamePanel.repaint();
             }
         });
+        
         
 
         //action listener to tell what to do when the "double" button is clicked
@@ -243,11 +273,15 @@ public class BlackJack {
         //action listener to tell what to do when the "stay" button is clicked
         stayButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                if (hasSplit && playerHand.size() > playerHandSplit.size()) {
+                if (hasSplit && !playingSplitHand) {
                     // Switch to playing the second hand
+                    playingSplitHand = true;
                     hitButton.setEnabled(true);
+                    handStatusLabel.setText("Playing Second Hand"); // Update message
+                    gamePanel.repaint();
                 } else {
                     // Proceed with dealer's turn
+                    handStatusLabel.setText("Dealer's Turn");
                     hitButton.setEnabled(false);
                     doubleButton.setEnabled(false);
                     stayButton.setEnabled(false);
@@ -258,13 +292,13 @@ public class BlackJack {
                         dealerAceCount += card.isAce() ? 1 : 0;
                         dealerHand.add(card);
                     }
+        
                     gamePanel.repaint();
                     checkWinner();
                 }
             }
         });
         
-
         splitButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 splitHand();
@@ -284,6 +318,8 @@ public void startGame() {
     // Reset game state
     hasSplit = false;
     dealerCardHidden = true;
+    playingSplitHand = false;
+    handStatusLabel.setText("Playing First Hand"); // Reset message
     splitButton.setEnabled(false); // Disable Split button by default
 
     // Create the deck
@@ -528,6 +564,7 @@ public void startGame() {
 
     public void splitHand() {
         hasSplit = true;
+        playingSplitHand = false;  // Start with first hand
     
         // Move second card to a new hand
         playerHandSplit = new ArrayList<Card>();
@@ -557,6 +594,7 @@ public void startGame() {
         // Repaint the game board to show the split
         gamePanel.repaint();
     }
+  
     
     public String getOutcomeMessage(int playerSum, int dealerSum) {
         if (playerSum > 21) return "Bust! You Lose!";
